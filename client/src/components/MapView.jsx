@@ -1,8 +1,18 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, Marker, useMap } from 'react-leaflet';
+import {
+  MapContainer,
+  TileLayer,
+  CircleMarker,
+  Popup,
+  Marker,
+  useMap,
+  LayersControl
+} from 'react-leaflet';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
+
+const { BaseLayer, Overlay } = LayersControl;
 
 // Fix the default Leaflet marker icon (Vite doesn't bundle PNGs by default)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -108,11 +118,45 @@ const MapView = ({
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
-          maxZoom={19}
-        />
+        <LayersControl position="topright">
+          {/* Default view: Satellite imagery (Esri World Imagery — free, no API key) */}
+          <BaseLayer checked name="🛰️ Satellite">
+            <TileLayer
+              attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={19}
+            />
+          </BaseLayer>
+
+          {/* Alternative view: Street map */}
+          <BaseLayer name="🗺️ Streets">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
+              maxZoom={19}
+            />
+          </BaseLayer>
+
+          {/* Optional minimalist style */}
+          <BaseLayer name="🎨 Light">
+            <TileLayer
+              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              maxZoom={19}
+            />
+          </BaseLayer>
+
+          {/* Always-on label overlay so satellite is navigable */}
+          <Overlay checked name="📍 Place Labels">
+            <TileLayer
+              attribution=''
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+              maxZoom={19}
+              opacity={0.9}
+            />
+          </Overlay>
+        </LayersControl>
+
         <MapController center={safeCenter} zoom={zoom} />
 
         {draggableMarker && (
@@ -133,12 +177,12 @@ const MapView = ({
             <CircleMarker
               key={c._id}
               center={[lat, lng]}
-              radius={9}
+              radius={10}
               pathOptions={{
-                color,
+                color: '#ffffff',
                 fillColor: color,
-                fillOpacity: 0.7,
-                weight: 2
+                fillOpacity: 0.95,
+                weight: 3
               }}
             >
               <Popup>
