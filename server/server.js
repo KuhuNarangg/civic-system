@@ -25,12 +25,19 @@ connectDB()
 // Middleware
 // Allow:
 //  - Any localhost port in dev (handles Vite picking 5174/5175 if 5173 is taken)
-//  - Whatever you set as CLIENT_URL in .env (production frontend URL)
-//  - Multiple comma-separated origins via CLIENT_URL (e.g. "https://a.com,https://b.com")
-const allowedOrigins = (process.env.CLIENT_URL || '')
+//  - The deployed Vercel frontend(s) below (DEFAULT_ALLOWED_ORIGINS)
+//  - Whatever you set as CLIENT_URL in .env (comma-separated for multiple)
+//  - Any *.vercel.app preview deployment of this project
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://civic-system-xi.vercel.app'
+];
+
+const envOrigins = (process.env.CLIENT_URL || '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
+
+const allowedOrigins = [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...envOrigins])];
 
 app.use(
   cors({
@@ -43,11 +50,18 @@ app.use(
         return callback(null, true);
       }
 
-      // Allow explicitly whitelisted origins from CLIENT_URL
+      // Allow explicitly whitelisted origins (defaults + CLIENT_URL)
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
+      // Allow Vercel preview deployments for this project
+      // (e.g. civic-system-xi-git-main-username.vercel.app)
+      if (/^https:\/\/civic-system[\w-]*\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn(`CORS blocked for origin: ${origin}`);
       return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true
