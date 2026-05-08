@@ -4,12 +4,11 @@ import { useAuth } from '../context/AuthContext';
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user && user.role === 'admin';
 
   const linkClass = ({ isActive }) =>
     `px-3 py-2 rounded-md text-sm font-medium transition ${
-      isActive
-        ? 'bg-brand-600 text-white'
-        : 'text-gray-700 hover:bg-gray-100'
+      isActive ? 'bg-brand-600 text-white' : 'text-gray-700 hover:bg-gray-100'
     }`;
 
   const handleLogout = () => {
@@ -26,23 +25,41 @@ const Navbar = () => {
               C
             </div>
             <span className="font-bold text-lg text-gray-900">Civic Reporter</span>
+            {isAdmin && (
+              <span className="hidden sm:inline ml-1 px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full border border-amber-200">
+                ADMIN
+              </span>
+            )}
           </Link>
 
           <div className="hidden md:flex items-center gap-2">
             <NavLink to="/" end className={linkClass}>
               Map
             </NavLink>
-            <NavLink to="/report" className={linkClass}>
-              Report Issue
-            </NavLink>
-            {user && (
-              <NavLink to="/my-complaints" className={linkClass}>
-                My Reports
+
+            {/* Citizen-only links */}
+            {user && !isAdmin && (
+              <>
+                <NavLink to="/report" className={linkClass}>
+                  Report Issue
+                </NavLink>
+                <NavLink to="/my-complaints" className={linkClass}>
+                  My Reports
+                </NavLink>
+              </>
+            )}
+
+            {/* Logged-out: show Report (will redirect to login) */}
+            {!user && (
+              <NavLink to="/report" className={linkClass}>
+                Report Issue
               </NavLink>
             )}
-            {user && user.role === 'admin' && (
+
+            {/* Admin-only link */}
+            {isAdmin && (
               <NavLink to="/admin" className={linkClass}>
-                Admin
+                Admin Dashboard
               </NavLink>
             )}
           </div>
@@ -84,15 +101,22 @@ const Navbar = () => {
           <NavLink to="/" end className={linkClass}>
             Map
           </NavLink>
-          <NavLink to="/report" className={linkClass}>
-            Report
-          </NavLink>
-          {user && (
-            <NavLink to="/my-complaints" className={linkClass}>
-              My Reports
+          {user && !isAdmin && (
+            <>
+              <NavLink to="/report" className={linkClass}>
+                Report
+              </NavLink>
+              <NavLink to="/my-complaints" className={linkClass}>
+                My Reports
+              </NavLink>
+            </>
+          )}
+          {!user && (
+            <NavLink to="/report" className={linkClass}>
+              Report
             </NavLink>
           )}
-          {user && user.role === 'admin' && (
+          {isAdmin && (
             <NavLink to="/admin" className={linkClass}>
               Admin
             </NavLink>

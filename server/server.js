@@ -6,14 +6,21 @@ const path = require('path');
 dotenv.config();
 
 const connectDB = require('./config/db');
+const seedAdmin = require('./utils/seedAdmin');
 const authRoutes = require('./routes/auth');
 const complaintRoutes = require('./routes/complaints');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Required for express-rate-limit v7 to read req.ip correctly
+// when running behind a proxy (Render, Vercel, Nginx, etc.)
+app.set('trust proxy', 1);
+
+// Connect to MongoDB, then seed default admin
+connectDB()
+  .then(() => seedAdmin())
+  .catch((err) => console.error('Startup error:', err));
 
 // Middleware
 // Allow:
